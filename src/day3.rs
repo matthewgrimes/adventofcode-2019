@@ -15,7 +15,7 @@ pub fn day3(file_path: String) {
     println!("{:?}", intersections);
 }
 
-fn parse_path(path: &String) -> Vec<(i32, i32)> {
+fn parse_path(path: &str) -> Vec<(i32, i32)> {
     let steps: Vec<String> = path.split(',').map(|s| s.parse().unwrap()).collect();
     let mut coords: Vec<(i32, i32)> = Vec::new();
     coords.push((0, 0));
@@ -30,7 +30,7 @@ fn parse_path(path: &String) -> Vec<(i32, i32)> {
 fn get_new_coord(current_coord: &(i32, i32), step: String) -> (i32, i32) {
     let (x, y) = current_coord;
     let direction = &step[..1];
-    let distance: i32 = (&step[1..]).parse().unwrap();
+    let distance: i32 = (step[1..]).parse().unwrap();
     match direction {
         "R" => (*x + distance, *y),
         "L" => (*x - distance, *y),

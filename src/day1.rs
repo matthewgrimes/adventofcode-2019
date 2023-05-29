@@ -15,11 +15,9 @@ fn calculate_added_fuel(base_weight: &i32) -> i32 {
 }
 
 pub fn day1(file_path: String) {
-    let numbers: Vec<i32>;
-
     let contents = fs::read_to_string(file_path).expect("Should have been able to read the file");
 
-    numbers = contents
+    let numbers: Vec<i32> = contents
         .split('\n')
         .map(|s| s.trim())
         .filter(|s| !s.is_empty())

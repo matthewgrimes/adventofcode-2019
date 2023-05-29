@@ -17,11 +17,11 @@ fn evaluate_program(mut program: Vec<usize>) -> (usize, usize) {
         if opcode == 1 {
             new_value = program[program[position + 1]] + program[program[position + 2]];
             program[new_value_position] = new_value;
-            position = position + 4;
+            position += 4;
         } else if opcode == 2 {
             new_value = program[program[position + 1]] * program[program[position + 2]];
             program[new_value_position] = new_value;
-            position = position + 4;
+            position += 4;
         } else {
             println!("Unknown opcode: {:?}", opcode);
             terminate_program = true;
