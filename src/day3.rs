@@ -15,7 +15,8 @@ pub fn day3(file_path: String) {
             let node10 = path1[j];
             let node11 = path1[j + 1];
 
-            let current_distance = distances0[..i].iter().sum::<i32>() + distances1[..j].iter().sum::<i32>();
+            let current_distance =
+                distances0[..i].iter().sum::<i32>() + distances1[..j].iter().sum::<i32>();
             let mut distance = 0;
             if node00.0 == node01.0 {
                 // first edge is vertical
@@ -35,13 +36,7 @@ pub fn day3(file_path: String) {
             }
         }
     }
-    println!(
-        "{:?}",
-        intersections
-            .iter()
-            .min()
-            .unwrap()
-    );
+    println!("{:?}", intersections.iter().min().unwrap());
 }
 
 fn check_intersection(horizontal: &[(i32, i32); 2], vertical: &[(i32, i32); 2]) -> i32 {
@@ -50,7 +45,7 @@ fn check_intersection(horizontal: &[(i32, i32); 2], vertical: &[(i32, i32); 2]) 
     let bottom = min(vertical[0].1, vertical[1].1);
     let top = max(vertical[0].1, vertical[1].1);
     // ignore origin
-    if horizontal[0].1==0 && vertical[0].0==0 {
+    if horizontal[0].1 == 0 && vertical[0].0 == 0 {
         return 0;
     }
     if vertical[0].0 <= right
@@ -63,7 +58,7 @@ fn check_intersection(horizontal: &[(i32, i32); 2], vertical: &[(i32, i32); 2]) 
         //println!("Distance:{:?}", horizontal[0].1.abs() + vertical[0].0.abs());
         //println!("Length:{:?}", (horizontal[0].1-vertical[0].1).abs() + (vertical[0].0 - horizontal[0].0).abs());
         //println!("---");
-        return (horizontal[0].1-vertical[0].1).abs() + (vertical[0].0 - horizontal[0].0).abs();
+        return (horizontal[0].1 - vertical[0].1).abs() + (vertical[0].0 - horizontal[0].0).abs();
     }
     0
 }
@@ -80,8 +75,8 @@ fn parse_path(path: &str) -> (Vec<(i32, i32)>, Vec<i32>) {
     (coords, distances)
 }
 
-fn get_distances(steps: &Vec<String>) -> Vec<i32> {
-   steps.iter().map(|x| x[1..].parse().unwrap()).collect() 
+fn get_distances(steps: &[String]) -> Vec<i32> {
+    steps.iter().map(|x| x[1..].parse().unwrap()).collect()
 }
 
 fn get_new_coord(current_coord: &(i32, i32), step: String) -> (i32, i32) {
