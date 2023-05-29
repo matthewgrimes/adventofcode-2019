@@ -1,0 +1,27 @@
+on:
+  push:
+    branches:
+      - master
+
+name: Release Packaging
+
+jobs:
+  release:
+    name: Release Packaging
+    env:
+      PROJECT_NAME_UNDERSCORE: aoc-2019
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: https://github.com/actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+      - name: Release Build
+        run: cargo build --release
+      - name: 'Upload Artifact'
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ env.PROJECT_NAME_UNDERSCORE }}
+          path: target/release/${{ env.PROJECT_NAME_UNDERSCORE }}
