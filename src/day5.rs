@@ -9,7 +9,7 @@ enum Op {
     Halt,
 }
 impl Op {
-    fn from_digits(code: usize) -> Self {
+    fn from_digits(code: i32) -> Self {
         match code {
             1 => Op::Add,
             2 => Op::Mult,
@@ -28,17 +28,17 @@ impl Op {
             Op::Halt => 0,
         }
     }
-    fn execute(&self, program_state: &mut ProgramState, parameters: &Vec<usize>) -> bool {
+    fn execute(&self, program_state: &mut ProgramState, parameters: &Vec<i32>) -> bool {
         if parameters.len() != self.number_of_parameters() {
             todo!();
         }
         match self {
             Op::Add => {
-                program_state.program[parameters[2]] = parameters[0] + parameters[1];
+                program_state.program[parameters[2] as usize] = parameters[0] + parameters[1];
                 true
             }
             Op::Mult => {
-                program_state.program[parameters[2]] = parameters[0] * parameters[1];
+                program_state.program[parameters[2] as usize] = parameters[0] * parameters[1];
                 true
             }
             Op::Halt => false,
@@ -51,7 +51,7 @@ enum ParamType {
     Immediate,
 }
 impl ParamType {
-    fn from_digit(digit: usize) -> Self {
+    fn from_digit(digit: i32) -> Self {
         match digit {
             0 => ParamType::Position,
             1 => ParamType::Immediate,
@@ -65,10 +65,10 @@ struct OpCode {
     param_modes: [ParamType; 3],
 }
 impl OpCode {
-    fn parse(code: &usize) -> Self {
-        let digits: Vec<usize> = format!("{:0>5}", code.to_string())
+    fn parse(code: &i32) -> Self {
+        let digits: Vec<i32> = format!("{:0>5}", code.to_string())
             .chars()
-            .map(|x| x.to_digit(10).unwrap() as usize)
+            .map(|x| x.to_digit(10).unwrap() as i32)
             .collect();
         OpCode {
             op: Op::from_digits(digits[3] * 10 + digits[4]),
@@ -83,13 +83,15 @@ impl OpCode {
         1 + self.op.number_of_parameters()
     }
     fn execute(&self, program_state: &mut ProgramState) -> bool {
-        let mut parameters: Vec<usize> = Vec::new();
+        let mut parameters: Vec<i32> = Vec::new();
         //self.op = Op::from_digits(program_state.program[program_state.head]);
         if self.op.number_of_parameters() > 0 {
             for parameter_index in 0..self.op.number_of_parameters() - 1 {
                 let parameter = program_state.program[program_state.head + parameter_index + 1];
                 match self.param_modes[parameter_index] {
-                    ParamType::Position => parameters.push(program_state.program[parameter]),
+                    ParamType::Position => {
+                        parameters.push(program_state.program[parameter as usize])
+                    }
                     ParamType::Immediate => parameters.push(parameter),
                 }
             }
@@ -101,7 +103,7 @@ impl OpCode {
 }
 #[derive(Debug)]
 struct ProgramState {
-    program: Vec<usize>,
+    program: Vec<i32>,
     head: usize,
 }
 impl ProgramState {
@@ -115,7 +117,7 @@ impl ProgramState {
         false
     }
 }
-fn evaluate_program(program: Vec<usize>) -> Vec<usize> {
+fn evaluate_program(program: Vec<i32>) -> Vec<i32> {
     let mut program_state = ProgramState { program, head: 0 };
     program_state.update();
     program_state.program
@@ -123,7 +125,7 @@ fn evaluate_program(program: Vec<usize>) -> Vec<usize> {
 pub fn day5(file_path: String) {
     let contents = fs::read_to_string(file_path).expect("Should have been able to read the file");
 
-    let numbers: Vec<usize> = contents
+    let numbers: Vec<i32> = contents
         .split(',')
         .map(|s| s.trim())
         .filter(|s| !s.is_empty())
