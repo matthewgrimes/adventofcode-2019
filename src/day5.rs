@@ -2,63 +2,59 @@ use std::fs;
 
 #[derive(Debug)]
 enum Op {
-    ADD,
-    MULT,
+    Add,
+    Mult,
     //    SAVE,
     //    READ,
-    HALT,
+    Halt,
 }
 impl Op {
     fn from_digits(code: usize) -> Self {
-        println!("Parsing Op from digits: {:?}", code);
         match code {
-            1 => return Op::ADD,
-            2 => return Op::MULT,
-            99 => return Op::HALT,
-            _ => todo!(),
+            1 => Op::Add,
+            2 => Op::Mult,
+            99 => Op::Halt,
+            _ => {
+                todo!()
+            }
         }
     }
     fn number_of_parameters(&self) -> usize {
         match self {
-            Op::ADD => 3,
-            Op::MULT => 3,
+            Op::Add => 3,
+            Op::Mult => 3,
             //Op::SAVE => 1,
             //Op::READ => 1,
-            Op::HALT => 0,
+            Op::Halt => 0,
         }
     }
     fn execute(&self, program_state: &mut ProgramState, parameters: &Vec<usize>) -> bool {
-        if parameters.len() != self.number_of_parameters().try_into().unwrap() {
+        if parameters.len() != self.number_of_parameters() {
             todo!();
         }
-        println!("{:?}", self);
         match self {
-            Op::ADD => {
-                println!("{:?}", parameters);
+            Op::Add => {
                 program_state.program[parameters[2]] = parameters[0] + parameters[1];
-                program_state.head += 1 + self.number_of_parameters();
                 true
             }
-            Op::MULT => {
-                println!("{:?}", parameters);
+            Op::Mult => {
                 program_state.program[parameters[2]] = parameters[0] * parameters[1];
-                program_state.head += 1 + self.number_of_parameters();
                 true
             }
-            Op::HALT => false,
+            Op::Halt => false,
         }
     }
 }
 #[derive(Debug)]
 enum ParamType {
-    POSITION,
-    IMMEDIATE,
+    Position,
+    Immediate,
 }
 impl ParamType {
     fn from_digit(digit: usize) -> Self {
         match digit {
-            0 => ParamType::POSITION,
-            1 => ParamType::IMMEDIATE,
+            0 => ParamType::Position,
+            1 => ParamType::Immediate,
             _ => todo!(),
         }
     }
@@ -74,7 +70,6 @@ impl OpCode {
             .chars()
             .map(|x| x.to_digit(10).unwrap() as usize)
             .collect();
-        println!("Digits: {:?}", digits);
         OpCode {
             op: Op::from_digits(digits[3] * 10 + digits[4]),
             param_modes: [
@@ -84,37 +79,23 @@ impl OpCode {
             ],
         }
     }
-    fn update(&mut self, code: &usize) {
-        let digits: Vec<usize> = format!("{:0>5}", code.to_string())
-            .chars()
-            .map(|x| x.to_digit(10).unwrap() as usize)
-            .collect();
-        println!("Digits: {:?}", digits);
-        self.op = Op::from_digits(digits[3] * 10 + digits[4]);
-        self.param_modes = [
-            ParamType::from_digit(digits[2]),
-            ParamType::from_digit(digits[1]),
-            ParamType::from_digit(digits[0]),
-        ];
-    }
-    fn instruction_length(&self) -> usize {
+    fn get_instruction_size(&self) -> usize {
         1 + self.op.number_of_parameters()
     }
-    fn execute(&mut self, program_state: &mut ProgramState) -> bool {
+    fn execute(&self, program_state: &mut ProgramState) -> bool {
         let mut parameters: Vec<usize> = Vec::new();
         //self.op = Op::from_digits(program_state.program[program_state.head]);
-        self.update(&program_state.program[program_state.head]);
-        for parameter_index in 0..self.op.number_of_parameters() - 1 {
-            let parameter = program_state.program[program_state.head + parameter_index as usize + 1];
-            parameters.push(parameter);
-            match self.param_modes[parameter_index as usize] {
-                ParamType::POSITION => parameters.push(program_state.program[parameter]),
-                ParamType::IMMEDIATE => parameters.push(parameter),
+        if self.op.number_of_parameters() > 0 {
+            for parameter_index in 0..self.op.number_of_parameters() - 1 {
+                let parameter = program_state.program[program_state.head + parameter_index + 1];
+                match self.param_modes[parameter_index] {
+                    ParamType::Position => parameters.push(program_state.program[parameter]),
+                    ParamType::Immediate => parameters.push(parameter),
+                }
             }
+            parameters
+                .push(program_state.program[program_state.head + self.op.number_of_parameters()]);
         }
-        parameters.push(program_state.program[program_state.head + 3]);
-        println!("{:?}", self);
-        println!("{:?}", parameters);
         self.op.execute(program_state, &parameters)
     }
 }
@@ -124,42 +105,32 @@ struct ProgramState {
     head: usize,
 }
 impl ProgramState {
-    fn update(&self) -> bool {
-        let current_op = OpCode::parse(&self.program[self.head]);
-        println!("Current Op: {:?}",current_op);
-        let parameters = self.program[self.head+1..self.head+1+current_op.op.number_of_parameters()];
-        current_op.execute(program_state, &parameters);
+    fn update(&mut self) -> bool {
+        let mut continue_program = true;
+        while continue_program {
+            let current_op = OpCode::parse(&self.program[self.head]);
+            continue_program = current_op.execute(self);
+            self.head += current_op.get_instruction_size();
+        }
         false
     }
 }
-fn evaluate_program(mut program: Vec<usize>) -> Vec<usize> {
-    let program_state = ProgramState {
-        program: program,
-        head: 0
-    };
+fn evaluate_program(program: Vec<usize>) -> Vec<usize> {
+    let mut program_state = ProgramState { program, head: 0 };
     program_state.update();
     program_state.program
 }
 pub fn day5(file_path: String) {
-    let mut numbers: Vec<usize>;
-
     let contents = fs::read_to_string(file_path).expect("Should have been able to read the file");
 
-    numbers = contents
+    let numbers: Vec<usize> = contents
         .split(',')
         .map(|s| s.trim())
         .filter(|s| !s.is_empty())
         .map(|s| s.parse().unwrap())
         .collect();
-    let program_state = ProgramState {
-        program: numbers,
-        head: 0
-    };
-    while program_state.update() {
-    println!("{:?}", program_state);
-    }
+    println!("{:?}", evaluate_program(numbers));
 }
-
 
 #[cfg(test)]
 mod tests {
