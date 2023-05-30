@@ -4,8 +4,8 @@ use std::fs;
 enum Op {
     Add,
     Mult,
-    //    SAVE,
-    //    READ,
+    Save,
+    Read,
     Halt,
 }
 impl Op {
@@ -13,6 +13,8 @@ impl Op {
         match code {
             1 => Op::Add,
             2 => Op::Mult,
+            3 => Op::Save,
+            4 => Op::Read,
             99 => Op::Halt,
             _ => {
                 todo!()
@@ -23,8 +25,8 @@ impl Op {
         match self {
             Op::Add => 3,
             Op::Mult => 3,
-            //Op::SAVE => 1,
-            //Op::READ => 1,
+            Op::Save => 1,
+            Op::Read => 1,
             Op::Halt => 0,
         }
     }
@@ -42,6 +44,15 @@ impl Op {
                 true
             }
             Op::Halt => false,
+            Op::Save => {
+                program_state.program[parameters[0] as usize] = 1;
+                true
+            }
+            Op::Read => {
+                println!("{:?}", program_state.program[parameters[0] as usize]);
+                true
+            }
+            _ => todo!()
         }
     }
 }
