@@ -1,6 +1,6 @@
 use std::fs;
 
-#[derive(Debug,PartialEq)]
+#[derive(Debug, PartialEq)]
 enum Op {
     Add,
     Mult,
@@ -30,14 +30,10 @@ impl Op {
         }
     }
     fn writes_to_program(&self) -> bool {
-        match self {
-        Op::Add => true,
-        Op::Mult => true,
-        Op::Save => true,
-        Op::LessThan => true,
-        Op::Equals => true,
-        _ => false
-        }
+        matches!(
+            self,
+            Op::Add | Op::Mult | Op::Save | Op::LessThan | Op::Equals
+        )
     }
     fn number_of_parameters(&self) -> usize {
         match self {
@@ -56,7 +52,7 @@ impl Op {
         if parameters.len() != self.number_of_parameters() {
             todo!();
         }
-        println!("{:?} {:?}",self, parameters);
+        println!("{:?} {:?}", self, parameters);
         match self {
             Op::Add => {
                 program_state.program[parameters[2] as usize] = parameters[0] + parameters[1];
@@ -71,25 +67,25 @@ impl Op {
                 program_state.program[parameters[0] as usize] = program_state.inputs.pop().unwrap();
             }
             Op::Read => {
-                program_state
-                    .outputs
-                   .push(parameters[0]);
+                program_state.outputs.push(parameters[0]);
             }
             Op::JumpIfTrue => {
-                if parameters[0]!=0 {
+                if parameters[0] != 0 {
                     program_state.head = parameters[1] as usize;
                 }
             }
             Op::JumpIfFalse => {
-                if parameters[0]==0 {
+                if parameters[0] == 0 {
                     program_state.head = parameters[1] as usize;
                 }
             }
             Op::LessThan => {
-                program_state.program[parameters[2] as usize] = if parameters[0]<parameters[1] {1} else {0};
+                program_state.program[parameters[2] as usize] =
+                    i32::from(parameters[0] < parameters[1]);
             }
             Op::Equals => {
-                program_state.program[parameters[2] as usize] = if parameters[0]==parameters[1] {1} else {0};
+                program_state.program[parameters[2] as usize] =
+                    i32::from(parameters[0] == parameters[1]);
             }
         }
         true
@@ -133,7 +129,7 @@ impl OpCode {
         1 + self.op.number_of_parameters()
     }
     fn execute(&self, program_state: &mut ProgramState) -> bool {
-        println!("{:?}",self);
+        println!("{:?}", self);
         let mut parameters: Vec<i32> = Vec::new();
         if self.op.number_of_parameters() > 0 {
             for parameter_index in 0..self.op.number_of_parameters() {
@@ -147,10 +143,11 @@ impl OpCode {
             }
             // parameters an instruction writes to are never in immediate mode!
             if self.op.writes_to_program() {
-                parameters[self.op.number_of_parameters()-1] = program_state.program[program_state.head + self.op.number_of_parameters()];
+                parameters[self.op.number_of_parameters() - 1] =
+                    program_state.program[program_state.head + self.op.number_of_parameters()];
             }
         }
-        println!("{:?}",parameters);
+        println!("{:?}", parameters);
         self.op.execute(program_state, &parameters)
     }
 }
@@ -171,8 +168,7 @@ impl ProgramState {
             // Only advance if an instruction didn't already modify head
             if current_head == self.head {
                 self.head += current_op.get_instruction_size();
-            }
-            else {
+            } else {
                 println!("Already moved.")
             }
         }
@@ -184,7 +180,7 @@ fn evaluate_program(program: Vec<i32>, inputs: Vec<i32>) -> ProgramState {
         program,
         head: 0,
         running: true,
-        inputs: inputs,
+        inputs,
         outputs: Vec::<i32>::new(),
     };
     program_state.update();
@@ -199,7 +195,10 @@ pub fn day5(file_path: String) {
         .filter(|s| !s.is_empty())
         .map(|s| s.parse().unwrap())
         .collect();
-    println!("{:?}", evaluate_program(numbers, vec![1]).outputs.pop().unwrap());
+    println!(
+        "{:?}",
+        evaluate_program(numbers, vec![1]).outputs.pop().unwrap()
+    );
     let numbers: Vec<i32> = contents
         .split(',')
         .map(|s| s.trim())
@@ -386,12 +385,24 @@ mod tests {
     }
     #[test]
     fn test_read_position() {
-        let input = vec![4,5,99,-1,-1,27];
-        assert_eq!(*evaluate_program(input, Vec::<i32>::new()).outputs.last().unwrap(),27);  
+        let input = vec![4, 5, 99, -1, -1, 27];
+        assert_eq!(
+            *evaluate_program(input, Vec::<i32>::new())
+                .outputs
+                .last()
+                .unwrap(),
+            27
+        );
     }
     #[test]
     fn test_read_immediate() {
-        let input = vec![104,5,99,-1,-1,27];
-        assert_eq!(*evaluate_program(input, Vec::<i32>::new()).outputs.last().unwrap(),5);  
+        let input = vec![104, 5, 99, -1, -1, 27];
+        assert_eq!(
+            *evaluate_program(input, Vec::<i32>::new())
+                .outputs
+                .last()
+                .unwrap(),
+            5
+        );
     }
 }
