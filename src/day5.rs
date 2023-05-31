@@ -6,6 +6,10 @@ enum Op {
     Mult,
     Save,
     Read,
+    JumpIfTrue,
+    JumpIfFalse,
+    LessThan,
+    Equals,
     Halt,
 }
 impl Op {
@@ -15,6 +19,10 @@ impl Op {
             2 => Op::Mult,
             3 => Op::Save,
             4 => Op::Read,
+            5 => Op::JumpIfTrue,
+            6 => Op::JumpIfFalse,
+            7 => Op::LessThan,
+            8 => Op::Equals,
             99 => Op::Halt,
             _ => {
                 todo!()
@@ -28,6 +36,10 @@ impl Op {
             Op::Save => 1,
             Op::Read => 1,
             Op::Halt => 0,
+            Op::JumpIfTrue => 2,
+            Op::JumpIfFalse => 2,
+            Op::LessThan => 3,
+            Op::Equals => 3,
         }
     }
     fn execute(&self, program_state: &mut ProgramState, parameters: &Vec<i32>) -> bool {
@@ -58,6 +70,7 @@ impl Op {
                     .push(program_state.program[parameters[0] as usize]);
                 true
             }
+            _ => todo!()
         }
     }
 }
