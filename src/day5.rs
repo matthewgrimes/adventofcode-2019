@@ -46,36 +46,44 @@ impl Op {
         if parameters.len() != self.number_of_parameters() {
             todo!();
         }
+        println!("{:?} {:?}",self, parameters);
         match self {
             Op::Add => {
                 program_state.program[parameters[2] as usize] = parameters[0] + parameters[1];
-                true
             }
             Op::Mult => {
                 program_state.program[parameters[2] as usize] = parameters[0] * parameters[1];
-                true
             }
             Op::Halt => {
                 program_state.running = false;
-                false
             }
             Op::Save => {
                 program_state.program[parameters[0] as usize] = program_state.inputs.pop().unwrap();
-                true
             }
             Op::Read => {
-                println!("{:?}", program_state.program[parameters[0] as usize]);
                 program_state
                     .outputs
-                    .push(program_state.program[parameters[0] as usize]);
-                true
+                  //  .push(parameters[0]);
+                  .push(program_state.program[parameters[0] as usize]);
+            }
+            Op::JumpIfTrue => {
+                if parameters[0]!=0 {
+                    program_state.head = parameters[1] as usize;
+                }
+            }
+            Op::JumpIfFalse => {
+                if parameters[0]==0 {
+                    program_state.head = parameters[1] as usize;
+                }
+            }
+            Op::LessThan => {
+                program_state.program[parameters[2] as usize] = if parameters[0]<parameters[1] {1} else {0};
             }
             Op::Equals => {
                 program_state.program[parameters[2] as usize] = if parameters[0]==parameters[1] {1} else {0};
-                true
             }
-            _ => todo!()
         }
+        true
     }
 }
 #[derive(Debug)]
@@ -116,8 +124,8 @@ impl OpCode {
         1 + self.op.number_of_parameters()
     }
     fn execute(&self, program_state: &mut ProgramState) -> bool {
+        println!("{:?}",self);
         let mut parameters: Vec<i32> = Vec::new();
-        //self.op = Op::from_digits(program_state.program[program_state.head]);
         if self.op.number_of_parameters() > 0 {
             for parameter_index in 0..self.op.number_of_parameters() - 1 {
                 let parameter = program_state.program[program_state.head + parameter_index + 1];
@@ -146,8 +154,15 @@ impl ProgramState {
     fn update(&mut self) -> bool {
         while self.running {
             let current_op = OpCode::parse(&self.program[self.head]);
+            let current_head = self.head;
             current_op.execute(self);
-            self.head += current_op.get_instruction_size();
+            // Only advance if an instruction didn't already modify head
+            if current_head == self.head {
+                self.head += current_op.get_instruction_size();
+            }
+            else {
+                println!("Already moved.")
+            }
         }
         false
     }
@@ -172,7 +187,14 @@ pub fn day5(file_path: String) {
         .filter(|s| !s.is_empty())
         .map(|s| s.parse().unwrap())
         .collect();
-    println!("{:?}", evaluate_program(numbers, vec![1]));
+    println!("{:?}", evaluate_program(numbers, vec![1]).outputs.pop().unwrap());
+    let numbers: Vec<i32> = contents
+        .split(',')
+        .map(|s| s.trim())
+        .filter(|s| !s.is_empty())
+        .map(|s| s.parse().unwrap())
+        .collect();
+    println!("{:?}", evaluate_program(numbers, vec![5]));
 }
 
 #[cfg(test)]
