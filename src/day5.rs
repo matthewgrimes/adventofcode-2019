@@ -1,6 +1,6 @@
 use std::fs;
 
-#[derive(Debug)]
+#[derive(Debug,PartialEq)]
 enum Op {
     Add,
     Mult,
@@ -27,6 +27,16 @@ impl Op {
             _ => {
                 todo!()
             }
+        }
+    }
+    fn writes_to_program(&self) -> bool {
+        match self {
+        Op::Add => true,
+        Op::Mult => true,
+        Op::Save => true,
+        Op::LessThan => true,
+        Op::Equals => true,
+        _ => false
         }
     }
     fn number_of_parameters(&self) -> usize {
@@ -63,8 +73,7 @@ impl Op {
             Op::Read => {
                 program_state
                     .outputs
-                //    .push(parameters[0]);
-                  .push(program_state.program[parameters[0] as usize]);
+                   .push(parameters[0]);
             }
             Op::JumpIfTrue => {
                 if parameters[0]!=0 {
@@ -127,7 +136,7 @@ impl OpCode {
         println!("{:?}",self);
         let mut parameters: Vec<i32> = Vec::new();
         if self.op.number_of_parameters() > 0 {
-            for parameter_index in 0..self.op.number_of_parameters() - 1 {
+            for parameter_index in 0..self.op.number_of_parameters() {
                 let parameter = program_state.program[program_state.head + parameter_index + 1];
                 match self.param_modes[parameter_index] {
                     ParamType::Position => {
@@ -136,9 +145,12 @@ impl OpCode {
                     ParamType::Immediate => parameters.push(parameter),
                 }
             }
-            parameters
-                .push(program_state.program[program_state.head + self.op.number_of_parameters()]);
+            // parameters an instruction writes to are never in immediate mode!
+            if self.op.writes_to_program() {
+                parameters[self.op.number_of_parameters()-1] = program_state.program[program_state.head + self.op.number_of_parameters()];
+            }
         }
+        println!("{:?}",parameters);
         self.op.execute(program_state, &parameters)
     }
 }
