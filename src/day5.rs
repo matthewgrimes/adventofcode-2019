@@ -52,7 +52,6 @@ impl Op {
                 println!("{:?}", program_state.program[parameters[0] as usize]);
                 true
             }
-            _ => todo!()
         }
     }
 }
