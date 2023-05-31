@@ -17,21 +17,21 @@ impl Orbit {
 }
 #[derive(Debug)]
 struct OrbitalSystem {
-    parentMap: HashMap<String, String>,
-    orbitalBodies: HashSet<String>,
+    parent_map: HashMap<String, String>,
+    orbital_bodies: HashSet<String>,
 }
 impl OrbitalSystem {
     fn from_vec(orbits: Vec<Orbit>) -> OrbitalSystem {
-        let mut parentMap = HashMap::new();
-        let mut orbitalBodies = HashSet::new();
+        let mut parent_map = HashMap::new();
+        let mut orbital_bodies = HashSet::new();
         for orbit in orbits {
-            parentMap.insert(orbit.orbiter.clone(), orbit.orbitee.clone());
-            orbitalBodies.insert(orbit.orbiter);
-            orbitalBodies.insert(orbit.orbitee);
+            parent_map.insert(orbit.orbiter.clone(), orbit.orbitee.clone());
+            orbital_bodies.insert(orbit.orbiter);
+            orbital_bodies.insert(orbit.orbitee);
         }
         OrbitalSystem {
-            parentMap,
-            orbitalBodies,
+            parent_map,
+            orbital_bodies,
         }
     }
 }
@@ -41,30 +41,30 @@ pub fn day6(file_path: String) {
     let orbits: Vec<Orbit> = contents
         .split('\n')
         .map(|x| x.parse().unwrap())
-        .map(|x| Orbit::from_notation(x))
+        .map(Orbit::from_notation)
         .collect();
 
-    println!("{:?}",count_orbits(orbits));
+    println!("{:?}", count_orbits(orbits));
 }
 fn count_orbits(orbits: Vec<Orbit>) -> u32 {
     let orbital_system = OrbitalSystem::from_vec(orbits);
     let mut counts = HashMap::new();
     let mut orbit_count = 0;
-    for orbital_body in orbital_system.orbitalBodies {
-        counts.insert(orbital_body.clone(),0);
+    for orbital_body in orbital_system.orbital_bodies {
+        counts.insert(orbital_body.clone(), 0);
         if orbital_body == "COM" {
             continue;
         }
-        let mut temp_orbital_body = &orbital_system.parentMap[&orbital_body];
+        let mut temp_orbital_body = &orbital_system.parent_map[&orbital_body];
         while temp_orbital_body != "COM" {
-            temp_orbital_body = &orbital_system.parentMap[&temp_orbital_body.clone()];
+            temp_orbital_body = &orbital_system.parent_map[&temp_orbital_body.clone()];
             orbit_count += 1;
             counts.entry(orbital_body.clone()).and_modify(|x| *x += 1);
         }
         // Plus one for final orbit
         orbit_count += 1;
     }
-    println!("{:?}",counts);
+    println!("{:?}", counts);
     orbit_count
 }
 #[cfg(test)]
