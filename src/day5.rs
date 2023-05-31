@@ -70,6 +70,10 @@ impl Op {
                     .push(program_state.program[parameters[0] as usize]);
                 true
             }
+            Op::Equals => {
+                program_state.program[parameters[2] as usize] = if parameters[0]==parameters[1] {1} else {0};
+                true
+            }
             _ => todo!()
         }
     }
