@@ -63,7 +63,7 @@ impl Op {
             Op::Read => {
                 program_state
                     .outputs
-                  //  .push(parameters[0]);
+                //    .push(parameters[0]);
                   .push(program_state.program[parameters[0] as usize]);
             }
             Op::JumpIfTrue => {
@@ -371,5 +371,15 @@ mod tests {
                 }
             );
         }
+    }
+    #[test]
+    fn test_read_position() {
+        let input = vec![4,5,99,-1,-1,27];
+        assert_eq!(*evaluate_program(input, Vec::<i32>::new()).outputs.last().unwrap(),27);  
+    }
+    #[test]
+    fn test_read_immediate() {
+        let input = vec![104,5,99,-1,-1,27];
+        assert_eq!(*evaluate_program(input, Vec::<i32>::new()).outputs.last().unwrap(),5);  
     }
 }
