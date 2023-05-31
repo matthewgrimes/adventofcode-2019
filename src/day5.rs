@@ -43,7 +43,9 @@ impl Op {
                 program_state.program[parameters[2] as usize] = parameters[0] * parameters[1];
                 true
             }
-            Op::Halt => false,
+            Op::Halt => {
+                program_state.running = false;
+                false},
             Op::Save => {
                 program_state.program[parameters[0] as usize] = program_state.inputs.pop().unwrap();
                 true
@@ -122,17 +124,16 @@ struct ProgramState {
 }
 impl ProgramState {
     fn update(&mut self) -> bool {
-        let mut continue_program = true;
-        while continue_program {
+        while self.running {
             let current_op = OpCode::parse(&self.program[self.head]);
-            continue_program = current_op.execute(self);
+            current_op.execute(self);
             self.head += current_op.get_instruction_size();
         }
         false
     }
 }
-fn evaluate_program(program: Vec<i32>) -> ProgramState {
-    let mut program_state = ProgramState { program, head: 0, running: true, inputs: vec![1], outputs: Vec::<i32>::new() };
+fn evaluate_program(program: Vec<i32>, inputs: Vec<i32>) -> ProgramState {
+    let mut program_state = ProgramState { program, head: 0, running: true, inputs: inputs, outputs: Vec::<i32>::new() };
     program_state.update();
     program_state
 }
@@ -145,7 +146,7 @@ pub fn day5(file_path: String) {
         .filter(|s| !s.is_empty())
         .map(|s| s.parse().unwrap())
         .collect();
-    println!("{:?}", evaluate_program(numbers));
+    println!("{:?}", evaluate_program(numbers, vec![1]));
 }
 
 #[cfg(test)]
@@ -153,27 +154,27 @@ mod tests {
     use crate::day5::evaluate_program;
     #[test]
     fn test_1() {
-        let result = evaluate_program(vec![1, 9, 10, 3, 2, 3, 11, 0, 99, 30, 40, 50]);
+        let result = evaluate_program(vec![1, 9, 10, 3, 2, 3, 11, 0, 99, 30, 40, 50], Vec::<i32>::new());
         assert_eq!(result.program, vec![3500, 9, 10, 70, 2, 3, 11, 0, 99, 30, 40, 50]);
     }
     #[test]
     fn test_2() {
-        let result = evaluate_program(vec![1, 0, 0, 0, 99]);
+        let result = evaluate_program(vec![1, 0, 0, 0, 99], Vec::<i32>::new());
         assert_eq!(result.program, vec![2, 0, 0, 0, 99]);
     }
     #[test]
     fn test_3() {
-        let result = evaluate_program(vec![2, 3, 0, 3, 99]);
+        let result = evaluate_program(vec![2, 3, 0, 3, 99], Vec::<i32>::new());
         assert_eq!(result.program, vec![2, 3, 0, 6, 99]);
     }
     #[test]
     fn test_4() {
-        let result = evaluate_program(vec![2, 4, 4, 5, 99, 0]);
+        let result = evaluate_program(vec![2, 4, 4, 5, 99, 0], Vec::<i32>::new());
         assert_eq!(result.program, vec![2, 4, 4, 5, 99, 9801]);
     }
     #[test]
     fn test_5() {
-        let result = evaluate_program(vec![1, 1, 1, 4, 99, 5, 6, 0, 99]);
+        let result = evaluate_program(vec![1, 1, 1, 4, 99, 5, 6, 0, 99], Vec::<i32>::new());
         assert_eq!(result.program, vec![30, 1, 1, 4, 2, 5, 6, 0, 99]);
     }
     #[test]
@@ -187,7 +188,7 @@ mod tests {
             10, 119, 123, 1, 6, 123, 127, 1, 127, 5, 131, 2, 9, 131, 135, 1, 5, 135, 139, 1, 139,
             10, 143, 1, 143, 2, 147, 1, 147, 5, 0, 99, 2, 0, 14, 0,
         ];
-        let result = evaluate_program(input);
+        let result = evaluate_program(input, Vec::<i32>::new());
         assert_eq!(result.program[0], 5305097);
     }
     #[test]
@@ -203,19 +204,19 @@ mod tests {
         ];
         input[1] = 49;
         input[2] = 25;
-        let result = evaluate_program(input);
+        let result = evaluate_program(input, Vec::<i32>::new());
         assert_eq!(result.program[0], 19690720);
     }
     #[test]
     fn test_day5_example() {
         let input = vec![1002, 4, 3, 4, 33];
-        let result = evaluate_program(input);
+        let result = evaluate_program(input, Vec::<i32>::new());
         assert_eq!(result.program, vec![1002, 4, 3, 4, 99]);
     }
     #[test]
     fn test_day5_part1() {
         let program = vec![ 3,225,1,225,6,6,1100,1,238,225,104,0,1102,89,49,225,1102,35,88,224,101,-3080,224,224,4,224,102,8,223,223,1001,224,3,224,1,223,224,223,1101,25,33,224,1001,224,-58,224,4,224,102,8,223,223,101,5,224,224,1,223,224,223,1102,78,23,225,1,165,169,224,101,-80,224,224,4,224,102,8,223,223,101,7,224,224,1,224,223,223,101,55,173,224,1001,224,-65,224,4,224,1002,223,8,223,1001,224,1,224,1,223,224,223,2,161,14,224,101,-3528,224,224,4,224,1002,223,8,223,1001,224,7,224,1,224,223,223,1002,61,54,224,1001,224,-4212,224,4,224,102,8,223,223,1001,224,1,224,1,223,224,223,1101,14,71,225,1101,85,17,225,1102,72,50,225,1102,9,69,225,1102,71,53,225,1101,10,27,225,1001,158,34,224,101,-51,224,224,4,224,102,8,223,223,101,6,224,224,1,223,224,223,102,9,154,224,101,-639,224,224,4,224,102,8,223,223,101,2,224,224,1,224,223,223,4,223,99,0,0,0,677,0,0,0,0,0,0,0,0,0,0,0,1105,0,99999,1105,227,247,1105,1,99999,1005,227,99999,1005,0,256,1105,1,99999,1106,227,99999,1106,0,265,1105,1,99999,1006,0,99999,1006,227,274,1105,1,99999,1105,1,280,1105,1,99999,1,225,225,225,1101,294,0,0,105,1,0,1105,1,99999,1106,0,300,1105,1,99999,1,225,225,225,1101,314,0,0,106,0,0,1105,1,99999,108,226,226,224,102,2,223,223,1006,224,329,101,1,223,223,1007,677,677,224,1002,223,2,223,1005,224,344,1001,223,1,223,8,226,677,224,1002,223,2,223,1006,224,359,1001,223,1,223,108,226,677,224,1002,223,2,223,1005,224,374,1001,223,1,223,107,226,677,224,102,2,223,223,1006,224,389,101,1,223,223,1107,226,226,224,1002,223,2,223,1005,224,404,1001,223,1,223,1107,677,226,224,102,2,223,223,1005,224,419,101,1,223,223,1007,226,226,224,102,2,223,223,1006,224,434,1001,223,1,223,1108,677,226,224,1002,223,2,223,1005,224,449,101,1,223,223,1008,226,226,224,102,2,223,223,1005,224,464,101,1,223,223,7,226,677,224,102,2,223,223,1006,224,479,101,1,223,223,1008,226,677,224,1002,223,2,223,1006,224,494,101,1,223,223,1107,226,677,224,1002,223,2,223,1005,224,509,1001,223,1,223,1108,226,226,224,1002,223,2,223,1006,224,524,101,1,223,223,7,226,226,224,102,2,223,223,1006,224,539,1001,223,1,223,107,226,226,224,102,2,223,223,1006,224,554,101,1,223,223,107,677,677,224,102,2,223,223,1006,224,569,101,1,223,223,1008,677,677,224,1002,223,2,223,1006,224,584,1001,223,1,223,8,677,226,224,1002,223,2,223,1005,224,599,101,1,223,223,1108,226,677,224,1002,223,2,223,1005,224,614,101,1,223,223,108,677,677,224,102,2,223,223,1005,224,629,1001,223,1,223,8,677,677,224,1002,223,2,223,1005,224,644,1001,223,1,223,7,677,226,224,102,2,223,223,1006,224,659,1001,223,1,223,1007,226,677,224,102,2,223,223,1005,224,674,101,1,223,223,4,223,99,226 ];
-        let result = evaluate_program(program);
+        let result = evaluate_program(program, vec![1]);
         assert_eq!(*result.outputs.last().unwrap(),7839346);
     }
 }
