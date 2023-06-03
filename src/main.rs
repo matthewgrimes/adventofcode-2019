@@ -11,6 +11,8 @@ pub mod day5;
 use crate::day5::day5;
 pub mod day6;
 use crate::day6::day6;
+pub mod day7;
+use crate::day7::day7;
 pub mod intcode;
 
 use std::env;
@@ -28,6 +30,7 @@ fn main() {
         4 => day4(file_path),
         5 => day5(file_path),
         6 => day6(file_path),
-        i32::MIN..=0_i32 | 2_i32..=i32::MAX => todo!(),
+        7 => day7(file_path),
+        i32::MIN..=0_i32 | 8_i32..=i32::MAX => todo!(),
     };
 }
