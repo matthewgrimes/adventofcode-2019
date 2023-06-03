@@ -109,13 +109,13 @@ struct OrbitalSystem {
     orbital_bodies: HashSet<String>,
 }
 impl OrbitalSystem {
-    fn from_vec(orbits: Vec<Orbit>) -> OrbitalSystem {
+    fn from_vec(orbits: &Vec<Orbit>) -> OrbitalSystem {
         let mut parent_map = HashMap::new();
         let mut orbital_bodies = HashSet::new();
         for orbit in orbits {
             parent_map.insert(orbit.orbiter.clone(), orbit.orbitee.clone());
-            orbital_bodies.insert(orbit.orbiter);
-            orbital_bodies.insert(orbit.orbitee);
+            orbital_bodies.insert(orbit.orbiter.clone());
+            orbital_bodies.insert(orbit.orbitee.clone());
         }
         OrbitalSystem {
             parent_map,
@@ -132,9 +132,14 @@ pub fn day6(file_path: String) {
         .map(Orbit::from_notation)
         .collect();
 
-    println!("{:?}", count_orbits(orbits));
+    println!("{:?}", count_orbits(&orbits));
+    let graph = OrbitalGraph::from_vec(orbits);
+    let orbital_transfer_path = graph.dijkstra(&"SAN".to_string(), &"YOU".to_string());
+    println!("{:?}", orbital_transfer_path);
+    // Convert from length of path to number of transfers to get adjacent
+    println!("{:?}", orbital_transfer_path.len() - 3);
 }
-fn count_orbits(orbits: Vec<Orbit>) -> u32 {
+fn count_orbits(orbits: &Vec<Orbit>) -> u32 {
     let orbital_system = OrbitalSystem::from_vec(orbits);
     let mut counts = HashMap::new();
     let mut orbit_count = 0;
@@ -213,6 +218,67 @@ mod tests {
         );
     }
     #[test]
+    fn test_orbital_transfer_example() {
+        let orbital_system = vec![
+            Orbit {
+                orbitee: "COM".to_string(),
+                orbiter: "B".to_string(),
+            },
+            Orbit {
+                orbitee: "B".to_string(),
+                orbiter: "C".to_string(),
+            },
+            Orbit {
+                orbitee: "C".to_string(),
+                orbiter: "D".to_string(),
+            },
+            Orbit {
+                orbitee: "D".to_string(),
+                orbiter: "E".to_string(),
+            },
+            Orbit {
+                orbitee: "E".to_string(),
+                orbiter: "F".to_string(),
+            },
+            Orbit {
+                orbitee: "B".to_string(),
+                orbiter: "G".to_string(),
+            },
+            Orbit {
+                orbitee: "G".to_string(),
+                orbiter: "H".to_string(),
+            },
+            Orbit {
+                orbitee: "D".to_string(),
+                orbiter: "I".to_string(),
+            },
+            Orbit {
+                orbitee: "E".to_string(),
+                orbiter: "J".to_string(),
+            },
+            Orbit {
+                orbitee: "J".to_string(),
+                orbiter: "K".to_string(),
+            },
+            Orbit {
+                orbitee: "K".to_string(),
+                orbiter: "L".to_string(),
+            },
+            Orbit {
+                orbitee: "K".to_string(),
+                orbiter: "YOU".to_string(),
+            },
+            Orbit {
+                orbitee: "I".to_string(),
+                orbiter: "SAN".to_string(),
+            },
+        ];
+        let graph = OrbitalGraph::from_vec(orbital_system);
+        let path = graph.dijkstra(&"YOU".to_string(), &"SAN".to_string());
+        println!("{:?}", path);
+        assert_eq!(path.len(), 7);
+    }
+    #[test]
     fn test_count_orbits() {
         let orbital_system = vec![
             Orbit {
@@ -260,6 +326,6 @@ mod tests {
                 orbiter: "L".to_string(),
             },
         ];
-        assert_eq!(count_orbits(orbital_system), 42);
+        assert_eq!(count_orbits(&orbital_system), 42);
     }
 }
