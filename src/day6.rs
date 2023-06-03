@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet, BinaryHeap};
+use std::collections::{BinaryHeap, HashMap, HashSet};
 use std::fs;
 
 #[derive(Debug)]
@@ -17,13 +17,13 @@ impl Orbit {
 }
 #[derive(Debug)]
 struct OrbitalGraph {
-    nodes: Vec::<String>,
-    graph: HashMap<usize,Vec::<usize>>,
+    nodes: Vec<String>,
+    graph: HashMap<usize, Vec<usize>>,
 }
 impl OrbitalGraph {
     fn from_vec(orbits: Vec<Orbit>) -> OrbitalGraph {
         let mut graph = HashMap::new();
-        let mut nodes: Vec::<String> = Vec::new();
+        let mut nodes: Vec<String> = Vec::new();
         for orbit in orbits.iter() {
             nodes.push(orbit.orbiter.clone());
             nodes.push(orbit.orbitee.clone());
@@ -36,42 +36,54 @@ impl OrbitalGraph {
             let orbitee_index = nodes.iter().position(|r| *r == orbit.orbitee).unwrap();
             graph.entry(orbitee_index).or_insert(Vec::new());
             graph.entry(orbiter_index).or_insert(Vec::new());
-            graph.entry(orbitee_index).and_modify(|x: &mut Vec::<usize>| x.push(orbiter_index));
-            graph.entry(orbiter_index).and_modify(|x: &mut Vec::<usize>| x.push(orbitee_index));
+            graph
+                .entry(orbitee_index)
+                .and_modify(|x: &mut Vec<usize>| x.push(orbiter_index));
+            graph
+                .entry(orbiter_index)
+                .and_modify(|x: &mut Vec<usize>| x.push(orbitee_index));
         }
-        OrbitalGraph{ nodes, graph }
+        OrbitalGraph { nodes, graph }
     }
-    fn dijkstra(&self, source: &String, destination: &String) -> Vec::<&String> {
-        println!("{:?}",self);
+    fn dijkstra(&self, source: &String, destination: &String) -> Vec<&String> {
+        println!("{:?}", self);
         let source_index = self.nodes.iter().position(|r| r == source).unwrap();
         let destination_index = self.nodes.iter().position(|r| r == destination).unwrap();
         println!("{:?} is at index {:?}", source, source_index);
         println!("{:?} is at index {:?}", destination, destination_index);
 
-        let mut unvisited_nodes: Vec::<usize> = (0 .. self.nodes.len()).collect();
-        println!("Unvisited Nodes: {:?}",unvisited_nodes);
+        let mut unvisited_nodes: Vec<usize> = (0..self.nodes.len()).collect();
+        println!("Unvisited Nodes: {:?}", unvisited_nodes);
 
-        let mut tentative_distance: Vec::<usize> = unvisited_nodes.iter().map(|&x| if x == source_index {0} else {usize::MAX}).collect();
+        let mut tentative_distance: Vec<usize> = unvisited_nodes
+            .iter()
+            .map(|&x| if x == source_index { 0 } else { usize::MAX })
+            .collect();
         println!("Tentative distance: {:?}", tentative_distance);
 
-        let mut node_heap = BinaryHeap::from([(tentative_distance[source_index],source_index)]);
-        println!("Next Node Heap: {:?}",node_heap);
+        let mut node_heap = BinaryHeap::from([(tentative_distance[source_index], source_index)]);
+        println!("Next Node Heap: {:?}", node_heap);
 
-        let mut previous_node: Vec::<usize> = vec![0;self.nodes.len()];
+        let mut previous_node: Vec<usize> = vec![0; self.nodes.len()];
 
-        let mut path: Vec::<&String> = vec![&self.nodes[destination_index]];
+        let mut path: Vec<&String> = vec![&self.nodes[destination_index]];
         while !node_heap.is_empty() {
-            println!("Next Node Heap: {:?}",node_heap);
+            println!("Next Node Heap: {:?}", node_heap);
             let (current_distance, current_node) = node_heap.pop().unwrap();
             if current_node == destination_index {
-                break
+                break;
             }
             for neighbor in self.graph[&current_node].iter() {
                 if !unvisited_nodes.contains(neighbor) {
-                    continue
+                    continue;
                 }
-                unvisited_nodes.remove(unvisited_nodes.iter().position(|&x| x == *neighbor).unwrap());
-                println!("Neighbor {:?}",neighbor);
+                unvisited_nodes.remove(
+                    unvisited_nodes
+                        .iter()
+                        .position(|&x| x == *neighbor)
+                        .unwrap(),
+                );
+                println!("Neighbor {:?}", neighbor);
                 let new_tentative_distance = current_distance + 1;
                 if new_tentative_distance < tentative_distance[*neighbor] {
                     println!("Found shorter path.");
@@ -81,9 +93,9 @@ impl OrbitalGraph {
                 }
             }
         }
-        println!("{:?}",previous_node);
+        println!("{:?}", previous_node);
         let mut current_node = destination_index;
-        while current_node!=source_index {
+        while current_node != source_index {
             current_node = previous_node[current_node];
             path.push(&self.nodes[current_node]);
         }
@@ -195,7 +207,10 @@ mod tests {
                 orbiter: "L".to_string(),
             },
         ];
-        assert_eq!(OrbitalGraph::from_vec(orbital_system).dijkstra(&'L'.to_string(), &'I'.to_string()),vec!["L","K","J","E","D","I"]);
+        assert_eq!(
+            OrbitalGraph::from_vec(orbital_system).dijkstra(&'L'.to_string(), &'I'.to_string()),
+            vec!["L", "K", "J", "E", "D", "I"]
+        );
     }
     #[test]
     fn test_count_orbits() {
