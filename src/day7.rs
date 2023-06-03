@@ -1,3 +1,4 @@
+use itertools::Itertools;
 use std::fs;
 
 use crate::intcode::program::ProgramState;
@@ -11,13 +12,24 @@ pub fn day7(file_path: String) {
         .filter(|s| !s.is_empty())
         .map(|s| s.parse().unwrap())
         .collect();
-    println!("{:?}", numbers);
+    println!("{:?}", find_optimal_inputs(&numbers));
 }
 
-fn calculate_signal(program: Vec<i32>, settings: Vec<i32>) -> i32 {
+fn find_optimal_inputs(program: &[i32]) -> i32 {
+    let mut max_output = 0;
+    for settings in (0..5).permutations(5) {
+        let output = calculate_signal(program, &settings);
+        if output > max_output {
+            max_output = output;
+        }
+    }
+    max_output
+}
+
+fn calculate_signal(program: &[i32], settings: &[i32]) -> i32 {
     let mut previous_output = 0;
     let mut amplifier = ProgramState {
-        program: program.clone(),
+        program: program.to_vec(),
         head: 0,
         running: true,
         inputs: vec![previous_output, settings[0]],
@@ -27,7 +39,7 @@ fn calculate_signal(program: Vec<i32>, settings: Vec<i32>) -> i32 {
     for setting in settings.iter().take(5).skip(1) {
         previous_output = amplifier.outputs.pop().unwrap();
         amplifier = ProgramState {
-            program: program.clone(),
+            program: program.to_vec(),
             head: 0,
             running: true,
             inputs: vec![previous_output, *setting],
@@ -46,9 +58,10 @@ mod tests {
             3, 15, 3, 16, 1002, 16, 10, 16, 1, 16, 15, 15, 4, 15, 99, 0, 0,
         ];
         assert_eq!(
-            crate::day7::calculate_signal(input, vec![4, 3, 2, 1, 0]),
+            crate::day7::calculate_signal(&input, &vec![4, 3, 2, 1, 0]),
             43210
-        )
+        );
+        assert_eq!(crate::day7::find_optimal_inputs(&input), 43210);
     }
     #[test]
     fn test_example_2() {
@@ -57,9 +70,10 @@ mod tests {
             99, 0, 0,
         ];
         assert_eq!(
-            crate::day7::calculate_signal(input, vec![0, 1, 2, 3, 4]),
+            crate::day7::calculate_signal(&input, &vec![0, 1, 2, 3, 4]),
             54321
-        )
+        );
+        assert_eq!(crate::day7::find_optimal_inputs(&input), 54321);
     }
     #[test]
     fn test_example_3() {
@@ -68,8 +82,9 @@ mod tests {
             33, 31, 31, 1, 32, 31, 31, 4, 31, 99, 0, 0, 0,
         ];
         assert_eq!(
-            crate::day7::calculate_signal(input, vec![1, 0, 4, 3, 2]),
+            crate::day7::calculate_signal(&input, &vec![1, 0, 4, 3, 2]),
             65210
-        )
+        );
+        assert_eq!(crate::day7::find_optimal_inputs(&input), 65210);
     }
 }
