@@ -34,8 +34,8 @@ impl OrbitalGraph {
         for orbit in orbits.iter() {
             let orbiter_index = nodes.iter().position(|r| *r == orbit.orbiter).unwrap();
             let orbitee_index = nodes.iter().position(|r| *r == orbit.orbitee).unwrap();
-            graph.entry(orbitee_index).or_insert(Vec::new());
-            graph.entry(orbiter_index).or_insert(Vec::new());
+            graph.entry(orbitee_index).or_default();
+            graph.entry(orbiter_index).or_default();
             graph
                 .entry(orbitee_index)
                 .and_modify(|x: &mut Vec<usize>| x.push(orbiter_index));
